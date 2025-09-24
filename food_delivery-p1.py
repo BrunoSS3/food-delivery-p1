@@ -1,20 +1,25 @@
-molde = ['id', 'Nome', 'Descrição', 'Preço', 'Estoque']
+molde_item = ['Código', 'Nome', 'Descrição', 'Preço', 'Estoque']
+molde_pedido = ['Código', 'Cliente', ['Item', 'Quantidade'], 'Status', 'Subtotal', 'Total', 'Cupom']
 itens = []
+pedidos = []
 
 
-while True:
-
-    print ('=== MENU === \n'
+print ('=== MENU === \n'
+        '(0) Sair\n'
         '(1) Cadastrar Item\n'
         '(2) Atualizar Item\n'
-        '(3) Consultar Itens\n')
+        '(3) Consultar Itens\n'
+        '(4) Detalhar item\n'
+        '(5) Criar Pedido')
 
-    while True:
+while True:
         try:
             usuario = int(input('Insira sua opção: '))
             break
         except:
             print('insira um numero inteiro ou valido')
+
+while usuario != 0:
 
     def CadastrarItem():
         sublista = []
@@ -27,21 +32,26 @@ while True:
             caracteristica = 1
         sublista.append(caracteristica)
 
-        caracteristica = input('Nome: ')
-        sublista.append(caracteristica)
-
-        caracteristica = input('Descrição: ')
-        sublista.append(caracteristica)
-
-        caracteristica = input('Preço: ')
-        sublista.append(caracteristica)
-
-        caracteristica = input('Estoque: ')
-        sublista.append(caracteristica)
+        for i in molde_item:
+            if i != 'Código':
+                caracteristica = input(f'{i}: ')
+                sublista.append(caracteristica)
 
         itens.append(sublista)
 
-        return formatarSaida(sublista)
+        return formatarSaida(sublista, 'item')
+
+        #caracteristica = input('Descrição: ')
+        #sublista.append(caracteristica)
+
+        #caracteristica = input('Preço: ')
+        #sublista.append(caracteristica)
+
+        #caracteristica = input('Estoque: ')
+        #sublista.append(caracteristica)
+        
+
+        
 
     def atualizarItem():
         if itens == []:
@@ -60,9 +70,9 @@ while True:
                 if i[0] == id_produto:
                     validar = 1
                     for j in range(0, (len(i)-1)):
-                        itens[contador][j+1] = input(f'{molde[j+1]}: ') 
+                        itens[contador][j+1] = input(f'{molde_item[j+1]}: ') 
                         
-                    return formatarSaida(i)
+                    return formatarSaida(i, 'item')
                 contador += 1
 
             if validar != 1:
@@ -70,26 +80,102 @@ while True:
             
     def consultarItens(codigo=0):
         if codigo == 0:
-            return formatarSaida(itens)
+            return formatarSaida(itens, 'item')
         else:
             for i in itens:
                 if i[0] == codigo:
-                    return formatarSaida(i)
+                    return formatarSaida(i, 'item')
 
-    def formatarSaida(identificador):
-    
-        if type(identificador) == list:
-            print(f"{'ID':<5}{'Nome':<15}{'Descrição':<20}{'Preço':<10}{'Estoque':<10}")
-            print('-'*60)
-            for i in itens:
-                print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
-        elif type(identificador) == int:
+    def formatarSaida(identificador, categoria):
+        
+        if categoria == 'pedido':
+            pass
+
+        if categoria == 'item':
+            if type(identificador) == list:
                 print(f"{'ID':<5}{'Nome':<15}{'Descrição':<20}{'Preço':<10}{'Estoque':<10}")
+                print('-'*60)
                 for i in itens:
-                    if identificador == i[0]:
-                        print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
+                    print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
+            elif type(identificador) == int:
+                    print(f"{'ID':<5}{'Nome':<15}{'Descrição':<20}{'Preço':<10}{'Estoque':<10}")
+                    for i in itens:
+                        if identificador == i[0]:
+                            print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
+            else:
+                print('Entrada não suportada!')
+        
+        return ''
+
+    def criar_pedido():
+        sublista = []
+        user_pedido = None
+        cupons = [
+            ["DESC10", 0.10],
+            ["DESC20", 0.20],
+            ["FRETE5", 0.05], 
+            ["DESC30", 0.30],
+            ["VALE20", 20.00]  
+        ]
+        verificar_cupom = 0
+        
+
+        # Código
+        if pedidos != []:
+            user_pedido = pedidos[-1][0] + 1
         else:
-            print('Entrada não suportada!')
+            user_pedido = 1
+            sublista.append(user_pedido)
+
+        # Cliente
+        user_pedido = str(input('Nome do Cliente: '))
+        sublista.append(user_pedido)
+
+        # Item e quantidade
+        def comprar(user_pedido):
+            comprar = []
+            while user_pedido != '0':
+                # Item
+                ## print(formatarSaida(itens))
+                user_pedido = input('Id do Item (0 para sair): ')
+                if user_pedido != '0':
+                    comprar.append(user_pedido)
+                    user_pedido = input('Quantidade: ')
+                    comprar.append(int(user_pedido))
+                    
+            else:
+                sublista.append(comprar)
+            
+        comprar(user_pedido)
+            
+        # Cupom
+        while user_pedido not in ['1','2']:
+            user_pedido = input('Você possui cupom de desconto?:\n'
+            '(1) Sim\n'
+            '(2) Não\n\n'
+            'Resposta: ')
+
+            if user_pedido not in ['1','2']:
+                print('Insira uma opção válida!')
+
+        if user_pedido == '1':
+            while verificar_cupom != 1 or user_pedido == '0':
+                user_pedido = input('Insira o cupom (0 para sair): ')
+                for i in cupons:
+                    if i[0] == user_pedido:
+                        verificar_cupom = 1
+                        print(f'Desconto aplicado de {i[1] * 100}%')
+                if verificar_cupom != 1:
+                    print('Cupom inválido, tente novamente!')
+            if user_pedido == '0':
+                print('Deseja prosseguir sem cupom?'
+                '(1) Sim'
+                '(2) Cancelar')
+        
+
+
+        return f'{sublista}\n\nPedido Concluído!'
+
 
     if usuario == 1:
         print(CadastrarItem())
@@ -97,3 +183,22 @@ while True:
         print(atualizarItem())
     elif usuario == 3:
         print(consultarItens())
+    elif usuario == 4:
+        pass
+    elif usuario == 5:
+        print(criar_pedido())
+
+    print ('=== MENU === \n'
+        '(0) Sair\n'
+        '(1) Cadastrar Item\n'
+        '(2) Atualizar Item\n'
+        '(3) Consultar Itens\n'
+        '(4) Detalhar item\n'
+        '(5) Criar Pedido')
+
+    while True:
+        try:
+            usuario = int(input('Insira sua opção: '))
+            break
+        except:
+            print('insira um numero inteiro ou valido')
