@@ -17,7 +17,7 @@ while True:
             usuario = int(input('Insira sua opção: '))
             break
         except:
-            print('insira um numero inteiro ou valido')
+            print('\n-----\nInsira um numero inteiro ou valido\n-----\n')
 
 while usuario != 0:
 
@@ -31,27 +31,52 @@ while usuario != 0:
         else:
             caracteristica = 1
         sublista.append(caracteristica)
-
+        '''
         for i in molde_item:
             if i != 'Código':
                 caracteristica = input(f'{i}: ')
                 sublista.append(caracteristica)
+        '''
+        # Nome
+        while type(caracteristica) != str:
+            try:
+                caracteristica = input(f'Nome: ')
+                caracteristica = float(caracteristica)
+                print('O nome não pode conter apenas números!')
+            except:
+                sublista.append(caracteristica)
+        else:
+            caracteristica = None
+        # Descrição
+        while type(caracteristica) != str:
+            try:
+                caracteristica = input(f'Descrição: ')
+                caracteristica = float(caracteristica)
+                print('A descrição não pode conter apenas números!')
+            except:
+                sublista.append(caracteristica)
+        else:
+            caracteristica = None
+        # Preço
+        while type(caracteristica) != float:
+            try:
+                caracteristica = float(input(f'Preço: '))
+                sublista.append(caracteristica)
+            except:
+                print('\n-----\nInsira um número válido!\n-----\n')
+        else:
+            caracteristica = None
+        # Estoque
+        while type(caracteristica) != int:
+            try:
+                caracteristica = int(input(f'Estoque: '))
+                sublista.append(caracteristica)
+            except:
+                print('\n-----\nInsira um número válido!\n-----\n')
 
         itens.append(sublista)
 
-        return formatarSaida(sublista, 'item')
-
-        #caracteristica = input('Descrição: ')
-        #sublista.append(caracteristica)
-
-        #caracteristica = input('Preço: ')
-        #sublista.append(caracteristica)
-
-        #caracteristica = input('Estoque: ')
-        #sublista.append(caracteristica)
-        
-
-        
+        #return formatarSaida(sublista, 'item')
 
     def atualizarItem():
         if itens == []:
@@ -99,12 +124,19 @@ while usuario != 0:
                     print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
             elif type(identificador) == int:
                     print(f"{'ID':<5}{'Nome':<15}{'Descrição':<20}{'Preço':<10}{'Estoque':<10}")
+                    print('-'*60)
                     for i in itens:
                         if identificador == i[0]:
                             print(f"{i[0]:<5}{i[1]:<15}{i[2]:<20}{i[3]:<10}{i[4]:<10}")
             else:
                 print('Entrada não suportada!')
-        
+            
+        if categoria == 'carrinho':
+            print(f"{'ID':<5}{'Nome':<15}{'Quantidade':<5}")
+            print('-'*45)
+            for i in identificador:
+                print(f"{i[0]:<5}{i[1]:<15}{i[2]:<5}")
+            
         return ''
 
     def criar_pedido():
@@ -118,11 +150,10 @@ while usuario != 0:
             ["VALE20", 20.00]  
         ]
         verificar_cupom = 0
-        
 
         # Código
         if pedidos != []:
-            user_pedido = pedidos[-1][0] + 1
+            user_pedido = int(pedidos[-1][0]) + 1
         else:
             user_pedido = 1
             sublista.append(user_pedido)
@@ -133,19 +164,29 @@ while usuario != 0:
 
         # Item e quantidade
         def comprar(user_pedido):
+            carrinho = []
             comprar = []
+            print(formatarSaida(itens, 'item'))
             while user_pedido != '0':
+                comprar = []
                 # Item
-                ## print(formatarSaida(itens))
                 user_pedido = input('Id do Item (0 para sair): ')
-                if user_pedido != '0':
-                    comprar.append(user_pedido)
-                    user_pedido = input('Quantidade: ')
-                    comprar.append(int(user_pedido))
-                    
-            else:
-                sublista.append(comprar)
-            
+                if user_pedido == '0':
+                    print('\n-----\nCarrinho Fechado!\n-----')
+                else:
+                    for i in itens:
+                        if str(i[0]) == user_pedido:
+                            comprar.append(user_pedido)
+                            comprar.append(i[1])
+                            user_pedido = input('Quantidade: ')
+                            comprar.append(int(user_pedido))
+                            carrinho.append(comprar)
+                            print(formatarSaida(carrinho, 'carrinho'))
+                        else:
+                            print('---\nInsira um Id válido!\n---\n')
+
+            sublista.append(carrinho)    
+        
         comprar(user_pedido)
             
         # Cupom
@@ -171,11 +212,12 @@ while usuario != 0:
                 print('Deseja prosseguir sem cupom?'
                 '(1) Sim'
                 '(2) Cancelar')
-        
 
-
+        pedidos.append(sublista)
         return f'{sublista}\n\nPedido Concluído!'
 
+    def monstrarPedido():
+        return pedidos
 
     if usuario == 1:
         print(CadastrarItem())
@@ -187,6 +229,8 @@ while usuario != 0:
         pass
     elif usuario == 5:
         print(criar_pedido())
+    elif usuario == 6:
+        monstrarPedido
 
     print ('=== MENU === \n'
         '(0) Sair\n'
@@ -194,11 +238,12 @@ while usuario != 0:
         '(2) Atualizar Item\n'
         '(3) Consultar Itens\n'
         '(4) Detalhar item\n'
-        '(5) Criar Pedido')
+        '(5) Criar Pedido\n'
+        '(6) Mostrar pedidos')
 
     while True:
         try:
             usuario = int(input('Insira sua opção: '))
             break
         except:
-            print('insira um numero inteiro ou valido')
+            print('\n-----\nInsira um numero inteiro ou valido\n-----\n')
