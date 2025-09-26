@@ -16,9 +16,22 @@ sequencia_cod = 1
 
 def cadastrar_item():
     nome = input("Nome do item: ")
-    preco = float(input("Preço do item: "))
     descricao = input("Descrição do item: ")
-    quantidade_estoque = int(input("Quantidade em estoque: "))
+    preco = None
+    quantidade_estoque = None
+
+    # Tratar preco e quantidade para ser float e int
+    while type(preco) != float:
+        try:
+            preco = float(input("Preço do item: "))
+        except:
+            print('\n-----Insira um número válido!-----\n')
+    
+    while type(quantidade_estoque) != int:
+        try:
+            quantidade_estoque = int(input("Quantidade em estoque: "))
+        except:
+            print('\n-----Insira um número válido!-----\n')
 
     global sequencia_cod
 
@@ -98,7 +111,7 @@ def criar_pedido():
         encontrado = False
         # percorre a lista buscando o código digitado, e adiciona ao pedido apenas aquilo que existe de fato no estoque.
         for item in itens:
-            if item[1] == codigo:
+            if str(item[1]) == codigo:
                 if item[4] > 0:
                     pedido_itens.append(item)
                     valor_total += item[2]
