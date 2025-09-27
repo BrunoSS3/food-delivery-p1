@@ -15,6 +15,13 @@ pedido:
 3 cupom
 4 status
 
+pedido:
+0 codigo
+1 itens
+2 valor_total
+3 cupom
+4 status
+
 '''
 
 # Base do projeto
@@ -32,7 +39,7 @@ todos_pedidos = []
 itens = []
 # gerador de códigos (incrementar)
 sequencia_cod = 1
-sequencia_cod_id = 1
+sequencia_cod_pedido = 1
 
 def cadastrar_item():
     nome = input("Nome do item: ")
@@ -122,7 +129,9 @@ def criar_pedido():
     comprar = []
     valor_total = 0.0
     quantidade = None
+    global sequencia_cod_pedido
     pedido = [sequencia_cod_pedido]
+    # pedido = [codigo, itens, valor_total, cupom, status]
 
     print("\nItens disponíveis:")
     for item in itens:
@@ -164,8 +173,10 @@ def criar_pedido():
         if not encontrado:
             print("Código não encontrado. Tente novamente.")
 
-        pedido.append(pedido_itens)
-     
+    
+
+    # Colocar as compras do cliente no pedido
+    pedido.append(pedido_itens)
 
     # pedido não pode ser vazio
     if len(pedido_itens) == 0:
@@ -188,7 +199,14 @@ def criar_pedido():
         else:
             print("Cupom inválido ou não inserido.")
 
+    # Valor Total
+    pedido.append(valor_total)
 
+    # Cupom
+    pedido.append(cupom)
+
+    # status
+    pedido.append(status)
 
     pedidos_pendentes.append(pedido)
     sequencia_cod_pedido += 1
