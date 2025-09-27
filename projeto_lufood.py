@@ -1,3 +1,22 @@
+'''
+bibliografia:
+
+produto:
+0 nome
+1 sequencia_cod
+2 preco
+3 descricao
+4 quantidade_estoque
+
+pedido:
+0 codigo
+1 itens
+2 valor_total
+3 cupom
+4 status
+
+'''
+
 # Base do projeto
 """
 menu de itens
@@ -54,7 +73,7 @@ def modificar_itens():
     # pede para o usuário digitar o código do item que deseja modificar e logo depois percorre a lista de itens buscando o código digitado; SE ENCONTRAR, entra no bloco if
     codigo = input("Digite o código do item que deseja modificar: ")
     for item in itens:
-        if item['codigo'] == codigo:
+        if str(item[1]) == codigo:
             print(f"Modificando item: {item[0]}")
             novo_nome = input(f"Novo nome (Nome atual: '{item[0]}'): ")
             novo_preco = input(f"Novo preço (Valor atual: '{item[2]}'): ")
@@ -95,6 +114,10 @@ def criar_pedido():
         print("Itens não cadastrados.")
         return
 
+    codigo = None
+    valor_total = None
+    cupom = None
+    status = 'AGUARDANDO APROVACAO'
     pedido_itens = []
     valor_total = 0.0
 
@@ -130,16 +153,22 @@ def criar_pedido():
         print("Pedido precisa ter pelo menos um item.")
         return
 
-    # tratamento do cupom; nesse caso temos 2 possibilidades ofertadas fora isso é inválido
-    cupom = input("CUPOM (se não tiver, deixe em branco): ")
-    if cupom == "DESCONTO10":
-        valor_total *= 0.9  # aplica 10% de desconto
-        print("Cupom aplicado: 10% de desconto.")
-    elif cupom == "DESCONTO20":
-        valor_total *= 0.8  # aplica 20% de desconto
-        print("Cupom aplicado: 20% de desconto.")
-    else:
-        print("Cupom inválido ou não inserido.")
+    # Tratamento do cupom; nesse caso temos 2 possibilidades ofertadas fora isso é inválido
+    while True:
+        cupom = input("CUPOM (se não tiver, deixe em branco): ")
+        if cupom == "DESCONTO10":
+            valor_total *= 0.9  # aplica 10% de desconto
+            print("Cupom aplicado: 10% de desconto.")
+            break
+        elif cupom == "DESCONTO20":
+            valor_total *= 0.8  # aplica 20% de desconto
+            print("Cupom aplicado: 20% de desconto.")
+            break
+        elif cupom == '':
+            break
+        else:
+            print("Cupom inválido ou não inserido.")
+
 
     # dicionário de pedido coletado que será adicionado a fila de pendentes
 
@@ -181,7 +210,7 @@ def finalizar_preparo():
 
     # pega o primeiro pedido da fila de aceitos e finaliza o preparo
     pedido = pedidos_aceitos.pop(0)
-    pedido["status"] = "Aguardando retirada do entregador."
+    pedido[4] = "Aguardando retirada do entregador."
     pedidos_prontos.append(pedido)
     print(f"Pedido #{pedido[0]} finalizado e aguardando entregador.")
 
@@ -209,20 +238,25 @@ def cancelar_pedido():
                     return
     print("Pedido não pode ser cancelado ou não foi encontrado.")
 
+def consultar_pedido():
+    pass
+
+
 
  # MENU DE ITENS
 while True: # loop infinito para o menu de itens
 
     print("Menu Principal")
-    print(f"{'(1) Cadastrar Produtos':<10}")
-    print(f"{'(2) Atualizar Produtos':<10}")
-    print(f"{'(3) Consultar Produtos':<10}")
-    print(f"{'(4) Criar Pedido':<10}")
-    print(f"{'(5) Processar Pedidos':<10}")
-    print(f"{'(6) Cancelar Pedido':<10}")
-    print(f"{'(7) Finalizar Preparação do Pedido':<10}")
-    print(f"{'(8) Atualizar Status do Pedido':<10}")
-    print(f"{'(0) SAIR':<10}")
+    print(f"{'(1) Cadastrar Produtos'}")
+    print(f"{'(2) Atualizar Produtos'}")
+    print(f"{'(3) Consultar Produtos'}")
+    print(f"{'(4) Criar Pedido'}")
+    print(f"{'(5) Processar Pedidos'}")
+    print(f"{'(6) Cancelar Pedido'}")
+    print(f"{'(7) Finalizar Preparação do Pedido'}")
+    print(f"{'(8) Atualizar Status do Pedido'}")
+    print(f"{'(9) Consultar Pedidos'}")
+    print(f"{'(0) SAIR'}")
 
     opcao = input("Escolha a opção desejada: ")
     if opcao == "1":
@@ -241,6 +275,8 @@ while True: # loop infinito para o menu de itens
         finalizar_preparo()
     elif opcao == "8":
         atualizar_status()
+    elif opcao == '9':
+        consultar_pedido()
     elif opcao == "0":
         print("Saindo do programa...")
         exit() # encerra o programa e o loop do "while"
