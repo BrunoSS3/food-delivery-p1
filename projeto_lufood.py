@@ -241,9 +241,7 @@ def cancelar_pedido():
 def consultar_pedido():
     pass
 
-
-
- # MENU DE ITENS
+# MENU DE ITENS
 while True: # loop infinito para o menu de itens
 
     print("Menu Principal")
@@ -255,7 +253,7 @@ while True: # loop infinito para o menu de itens
     print(f"{'(6) Cancelar Pedido'}")
     print(f"{'(7) Finalizar Preparação do Pedido'}")
     print(f"{'(8) Atualizar Status do Pedido'}")
-    print(f"{'(9) Consultar Pedidos'}")
+    print(f"{'(9) Consultar Pedidos (BROKEN)'}")
     print(f"{'(0) SAIR'}")
 
     opcao = input("Escolha a opção desejada: ")
