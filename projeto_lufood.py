@@ -32,6 +32,7 @@ todos_pedidos = []
 itens = []
 # gerador de códigos (incrementar)
 sequencia_cod = 1
+sequencia_cod_id = 1
 
 def cadastrar_item():
     nome = input("Nome do item: ")
@@ -118,8 +119,10 @@ def criar_pedido():
     cupom = ''
     status = 'AGUARDANDO APROVACAO'
     pedido_itens = []
+    comprar = []
     valor_total = 0.0
-    quantidade = 0
+    quantidade = None
+    pedido = [sequencia_cod_pedido]
 
     print("\nItens disponíveis:")
     for item in itens:
@@ -127,6 +130,8 @@ def criar_pedido():
 
     # loop para adicionar itens ao pedido, enquanto não digitar 'fim' ele continua solicitando código.
     while True:
+        comprar = []
+        quantidade = None
         codigo = input("Digite os códigos do item desejado. Para finalizar, digite 'fim'. ")
         if codigo.lower() == "fim":
             break
@@ -135,17 +140,19 @@ def criar_pedido():
         # percorre a lista buscando o código digitado, e adiciona ao pedido apenas aquilo que existe de fato no estoque.
         for item in itens:
             if str(item[1]) == codigo:
-                
+        
                 while type(quantidade) != int:
                     try:
-                        quantidade = int(input("Quantidade em estoque: "))
+                        quantidade = int(input("Quantidade: "))
                     except:
                         print('\n-----Insira um número válido!-----\n')
 
                 if quantidade < item[4]:
-                    pedido_itens.append(codigo)
-                    pedido_itens.append(quantidade)
                     valor_total += item[2] * quantidade
+                    comprar.append(codigo)
+                    comprar.append(quantidade)
+                    comprar.append(valor_total)
+                    pedido_itens = comprar
                     item[4] -= quantidade  # reduz o estoque
                     print(f"{quantidade} de {item[0]} adicionado(s) ao pedido.")
                 else:
@@ -154,9 +161,11 @@ def criar_pedido():
                 encontrado = True
                 break
         
-
         if not encontrado:
             print("Código não encontrado. Tente novamente.")
+
+        pedido.append(pedido_itens)
+     
 
     # pedido não pode ser vazio
     if len(pedido_itens) == 0:
@@ -179,13 +188,14 @@ def criar_pedido():
         else:
             print("Cupom inválido ou não inserido.")
 
-    pedido = [sequencia_cod, itens, valor_total, cupom, status]
+
 
     pedidos_pendentes.append(pedido)
+    sequencia_cod_pedido += 1
     print(f"\nPedido #0{pedido[0]} criado com sucesso!")
     print(f"Status: {pedido[4]}")
     print(f"Valor total: R$ {pedido[2]}")
-    print(pedido)
+    
 
 def processar_pedidos():
     # verifica se tem pedidos pendentes para processamento de fila
@@ -267,9 +277,6 @@ def consultar_pedido():
             nome_item= item[0]
             preco_item= item[2]
             print(f"{nome_item} (R$ {preco_item:.2f})")
-    
-
-
 
  # MENU DE ITENS
 while True: # loop infinito para o menu de itens
