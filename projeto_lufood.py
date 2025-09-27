@@ -1,48 +1,22 @@
-'''
-bibliografia:
-
-item:
-0 nome
-1 sequencia_cod
-2 preco
-3 descricao
-4 quantidade_estoque
-
-pedido:
-0 codigo
-1 itens
-2 valor_total
-3 cupom
-4 status
-
-pedido:
-0 codigo
-1 itens
-2 valor_total
-3 cupom
-4 status
-
-'''
-
-# Base do projeto
-"""
-menu de itens
-cadastro -> atualização -> consulta
-detalhes do itens
-
-"""
 pedidos_ativos = []
 pedidos_finalizados = []
-
-# Lista para guardar todos os itens que forem cadastrados.
-pedidos_pendentes = []
-pedidos_aceitos = []
-pedidos_prontos = []
 todos_os_pedidos = []
 itens = []
 # gerador de códigos (incrementar)
 sequencia_cod = 1
 sequencia_cod_pedido = 1
+
+# Filas
+
+pedido_aguardando_aprovacao = []
+pedido_aceito = []
+pedido_fazendo = []
+pedido_feito = []
+pedido_esperando_entregador = []
+pedido_saiu_entrega = []
+pedido_entregue = []
+pedido_rejeitado = []
+pedido_cancelado = []
 
 def cadastrar_item():
     nome = input("Nome do item: ")
@@ -125,51 +99,55 @@ def criar_pedido():
         print("Itens não cadastrados.")
         return
 
-    valor_total = None
     cupom = ''
     status = 'AGUARDANDO APROVACAO'
     pedido_itens = []
-    comprar = []
-    valor_total = 0.0
-    quantidade = None
+    valor_total = 0.0 # Começa em 0 para somar
+    
     global sequencia_cod_pedido
     pedido = [sequencia_cod_pedido]
-    # pedido = [codigo, itens, valor_total, cupom, status]
-
+    
     print("\nItens disponíveis:")
     for item in itens:
         print(f"Código: {item[1]}, Nome: {item[0]}, Preço: R$ {item[2]}")
 
-    # loop para adicionar itens ao pedido, enquanto não digitar 'fim' ele continua solicitando código.
+    # loop para adicionar itens ao pedido
     while True:
         comprar = []
         quantidade = None
-        codigo = input("Digite os códigos do item desejado. Para finalizar, digite 'fim'. ")
+        codigo = input("Digite o código do item desejado. Para finalizar, digite 'fim'. ")
         if codigo.lower() == "fim":
             break
 
         encontrado = False
-        # percorre a lista buscando o código digitado, e adiciona ao pedido apenas aquilo que existe de fato no estoque.
         for item in itens:
             if str(item[1]) == codigo:
-        
                 while type(quantidade) != int:
                     try:
                         quantidade = int(input("Quantidade: "))
                     except:
                         print('\n-----Insira um número válido!-----\n')
 
-                if quantidade <= item[4]:
-                    valor_total += item[2] * quantidade
+                if quantidade > 0 and quantidade <= item[4]:
+                    # --- INÍCIO DAS CORREÇÕES ---
+                    
+                    subtotal_item = item[2] * quantidade
+                    valor_total += subtotal_item           
+                    
                     comprar.append(codigo)
                     comprar.append(item[0])
                     comprar.append(quantidade)
-                    comprar.append(valor_total)
+                    comprar.append(subtotal_item)         
+                    
+                    # --- FIM DAS CORREÇÕES ---
+                    
                     pedido_itens.append(comprar)
                     item[4] -= quantidade  # reduz o estoque
-                    print(f"{quantidade} de {item[0]} adicionado(s) ao pedido.")
+                    print(f"{quantidade} unidades de {item[0]} adicionado(s) ao pedido.")
+                elif quantidade <= 0:
+                    print("A quantidade deve ser maior que zero.")
                 else:
-                    print(f"Item '{item[0]}' acabou. Insira outro código ou finalize.")
+                    print(f"Estoque insuficiente para '{item[0]}'. Apenas {item[4]} disponível(is).")
                 
                 encontrado = True
                 break
@@ -177,25 +155,24 @@ def criar_pedido():
         if not encontrado:
             print("Código não encontrado. Tente novamente.")
 
-    
+    # pedido não pode ser vazio
+    if len(pedido_itens) == 0:
+        print("Pedido cancelado pois nenhum item foi adicionado.")
+        return
 
     # Colocar as compras do cliente no pedido
     pedido.append(pedido_itens)
 
-    # pedido não pode ser vazio
-    if len(pedido_itens) == 0:
-        print("Pedido precisa ter pelo menos um item.")
-        return
-
-    # Tratamento do cupom; nesse caso temos 2 possibilidades ofertadas fora isso é inválido
+    # Tratamento do cupom;
+    valor_com_desconto = valor_total # Inicia com o valor total
     while True:
         cupom = input("CUPOM (se não tiver, deixe em branco): ")
         if cupom == "DESCONTO10":
-            valor_total *= 0.9  # aplica 10% de desconto
+            valor_com_desconto = valor_total * 0.9  # aplica 10% de desconto
             print("Cupom aplicado: 10% de desconto.")
             break
         elif cupom == "DESCONTO20":
-            valor_total *= 0.8  # aplica 20% de desconto
+            valor_com_desconto = valor_total * 0.8  # aplica 20% de desconto
             print("Cupom aplicado: 20% de desconto.")
             break
         elif cupom == '':
@@ -204,7 +181,7 @@ def criar_pedido():
             print("Cupom inválido ou não inserido.")
 
     # Valor Total
-    pedido.append(valor_total)
+    pedido.append(valor_com_desconto)
 
     # Cupom
     pedido.append(cupom)
@@ -215,9 +192,9 @@ def criar_pedido():
     pedidos_ativos.append(pedido)
     todos_os_pedidos.append(pedido)
     sequencia_cod_pedido += 1
-    print(f"\nPedido #0{pedido[0]} criado com sucesso!")
+    print(f"\nPedido #{pedido[0]:02d} criado com sucesso!")
     print(f"Status: {pedido[4]}")
-    print(f"Valor total: R$ {pedido[2]}")
+    print(f"Valor total: R$ {pedido[2]:.2f}")
 
 def imprimir_detalhes_pedido(pedido):
     """Função auxiliar para imprimir um único pedido de forma formatada."""
@@ -250,7 +227,6 @@ def consultar_pedido():
     print("\n======== Histórico de Todos os Pedidos ========")
     for pedido in todos_os_pedidos:
         imprimir_detalhes_pedido(pedido)
-    print("==============================================")
 
 
     # Passo 2: Oferecer opções para filtrar por status
@@ -313,143 +289,161 @@ def mostrar_pedidos_por_status(status_desejado, flag=0):
         if pedido[4] == status_desejado:
             print(f"  - ID: {pedido[0]}, Valor: R$ {pedido[2]}")
             encontrou_lista = True
-            return encontrou_lista
+            
         
     if not encontrou_lista and flag != 0:
         print("\n---- Nenhum pedido encontrado com este status ----\n")
     
     return encontrou_lista
 
+def buscar_primeiro_pedido_por_status(status_desejado):
+    """Encontra o pedido mais antigo (o primeiro da lista) com um status específico."""
+    for pedido in pedidos_ativos:
+        if pedido[4] == status_desejado:
+            return pedido  # Retorna o primeiro que encontrar
+    return None # Retorna None se nenhum pedido com esse status for encontrado
+
 def gerenciar_status_pedido():
     while True:
         print("\n--- Gerenciador de Status de Pedidos ---")
-        print("(1) Processar Novo Pedido (Aceitar/Rejeitar)")
-        print("(2) Iniciar Preparo do Pedido")
-        print("(3) Finalizar Preparo do Pedido")
-        print("(4) Informar que Aguarda Entregador")
-        print("(5) Informar Saída para Entrega")
-        print("(6) Finalizar Pedido como ENTREGUE")
-        print("(7) Cancelar Pedido")
+        print("O sistema sempre processará o pedido mais antigo de cada etapa.")
+        print("(1) AGUARDANDO APROVACAO")
+        print("(2) ACEITO")
+        print("(3) FAZENDO")
+        print("(4) FEITO")
+        print("(5) ESPERANDO ENTREGADOR")
+        print("(6) SAIU PARA ENTREGA")
+        print("(7) CANCELAR")
         print("(0) Voltar ao Menu Principal")
-            
-        sub_opcao = input("Escolha uma opção: ")
-        pedido_marcado = None
+        
+        sub_opcao = input("Escolha uma ação: ")
 
         if sub_opcao == "0":
             print("Voltando ao menu principal")
             return
 
-        # Para cada opção, mostramos a lista de pedidos relevantes primeiro
-        if sub_opcao == "1":
-            pedidos_existem = mostrar_pedidos_por_status('AGUARDANDO APROVACAO')
-            if not pedidos_existem:
-                continue # Volta para o menu se não houver pedidos para processar
-        elif sub_opcao == "2":
-            pedidos_existem = mostrar_pedidos_por_status("ACEITO")
-            if not pedidos_existem:
+        pedido_alvo = None
+        acao_invalida = False
+
+        if sub_opcao == '1':
+            pedido_alvo = buscar_primeiro_pedido_por_status('AGUARDANDO APROVACAO')
+            if not pedido_alvo:
+                print("\nNenhum pedido aguardando aprovação.")
                 continue
-        elif sub_opcao == "3":
-            pedidos_existem = mostrar_pedidos_por_status("FAZENDO")
-            if not pedidos_existem:
+            
+            print("\nProcessando pedidos:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Aceitar (A) ou Rejeitar (R) o pedido? ").upper()
+            if decisao == "A":
+                pedido_alvo[4] = "ACEITO"
+                print(f"Pedido #{pedido_alvo[0]:02d} ACEITO.")
+            elif decisao == "R":
+                pedido_alvo[4] = "REJEITADO"
+                pedidos_ativos.remove(pedido_alvo)
+                pedidos_finalizados.append(pedido_alvo)
+                print(f"Pedido #{pedido_alvo[0]:02d} REJEITADO e movido para finalizados.")
+            else:
+                print("Opção inválida. Nenhuma ação tomada.")
+
+        elif sub_opcao == '2':
+            pedido_alvo = buscar_primeiro_pedido_por_status('ACEITO')
+            if not pedido_alvo:
+                print("\nNenhum pedido aceito.")
                 continue
-        elif sub_opcao == "4":
-            pedidos_existem = mostrar_pedidos_por_status("FEITO")
-            if not pedidos_existem:
+
+            print("\nIniciando preparo:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Confirmar início do preparo (S/N)? ").upper()
+            if decisao == 'S':
+                pedido_alvo[4] = "FAZENDO"
+                print(f"Pedido #{pedido_alvo[0]:02d} agora está sendo FEITO.")
+            else:
+                print("Ação cancelada.")
+
+        elif sub_opcao == '3':
+            pedido_alvo = buscar_primeiro_pedido_por_status('FAZENDO')
+            if not pedido_alvo:
+                print("\nNenhum pedido em preparação.")
                 continue
-        elif sub_opcao == "5":
-            pedidos_existem = mostrar_pedidos_por_status("ESPERANDO ENTREGADOR")
-            if not pedidos_existem:
+            
+            print("\nFinalizando preparo:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Confirmar finalização do preparo (S/N)? ").upper()
+            if decisao == 'S':
+                pedido_alvo[4] = "FEITO"
+                print(f"Pedido #{pedido_alvo[0]} foi FEITO e está pronto.")
+            else:
+                print("Ação cancelada.")
+        
+        elif sub_opcao == '4':
+            pedido_alvo = buscar_primeiro_pedido_por_status('FEITO')
+            if not pedido_alvo:
+                print("\nNenhum pedido pronto para entrega.")
                 continue
-        elif sub_opcao == "6":
-            pedidos_existem = mostrar_pedidos_por_status("SAIU PARA ENTREGA")
-            if not pedidos_existem:
+            
+            print("\nMovendo pedido para aguardar entregador:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Confirmar (S/N)? ").upper()
+            if decisao == 'S':
+                pedido_alvo[4] = "ESPERANDO ENTREGADOR"
+                print(f"Pedido #{pedido_alvo[0]:02d} agora está ESPERANDO ENTREGADOR.")
+            else:
+                print("Ação cancelada.")
+
+        elif sub_opcao == '5':
+            pedido_alvo = buscar_primeiro_pedido_por_status('ESPERANDO ENTREGADOR')
+            if not pedido_alvo:
+                print("\nNenhum pedido aguardando entregador.")
                 continue
-        elif sub_opcao == "7":
-            print("\nPedidos que podem ser cancelados:")
-            pedidos_pendentes = mostrar_pedidos_por_status("AGUARDANDO APROVACAO")
-            pedidos_aceitos = mostrar_pedidos_por_status("ACEITO", 1)
-            if not pedidos_pendentes and not pedidos_aceitos:
+            
+            print("\nDespachando pedido para entrega:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Confirmar saída para entrega (S/N)? ").upper()
+            if decisao == 'S':
+                pedido_alvo[4] = "SAIU PARA ENTREGA"
+                print(f"Pedido #{pedido_alvo[0]:02d} SAIU PARA ENTREGA.")
+            else:
+                print("Ação cancelada.")
+
+        elif sub_opcao == '6':
+            pedido_alvo = buscar_primeiro_pedido_por_status('SAIU PARA ENTREGA')
+            if not pedido_alvo:
+                print("\nNenhum pedido em rota de entrega.")
                 continue
+
+            print("\nFinalizando entrega do pedido:")
+            imprimir_detalhes_pedido(pedido_alvo)
+            decisao = input("Confirmar entrega (S/N)? ").upper()
+            if decisao == 'S':
+                pedido_alvo[4] = "ENTREGUE"
+                pedidos_ativos.remove(pedido_alvo)
+                pedidos_finalizados.append(pedido_alvo)
+                print(f"Pedido #{pedido_alvo[0]:02d} finalizado como ENTREGUE.")
+            else:
+                print("Ação cancelada.")
+
+        elif sub_opcao == '7':
+            codigo_pedido = input('Insira o ID do pedido que deseja cancelar: ')
+            pedido_encontrado = None
+            for p in pedidos_ativos:
+                if str(p[0]) == codigo_pedido:
+                    pedido_encontrado = p
+                    break
+            
+            if not pedido_encontrado:
+                print(f"Pedido com ID {codigo_pedido} não encontrado nos pedidos ativos.")
+                continue
+
+            if pedido_encontrado[4] in ["AGUARDANDO APROVACAO", "ACEITO"]:
+                pedido_encontrado[4] = "CANCELADO"
+                pedidos_ativos.remove(pedido_encontrado)
+                pedidos_finalizados.append(pedido_encontrado)
+                print(f"Pedido #{pedido_encontrado[0]:02d} CANCELADO.")
+            else:
+                print(f"Erro: Pedido não pode mais ser cancelado. Status atual: {pedido_encontrado[4]}")
 
         else:
             print("Opção inválida. Tente novamente.")
-            continue
-
-        codigo_pedido = input('Insira o id do pedido para alterar (0 para voltar): ')
-
-        if codigo_pedido == '0':
-            continue
-
-        for pedido in pedidos_ativos:
-            if str(pedido[0]) == codigo_pedido:
-                pedido_marcado = pedido
-            else:
-                print(f"Erro: Pedido com ID {codigo_pedido} não encontrado.")
-                
-        if sub_opcao == '1':
-            if pedido_marcado[4] == 'AGUARDANDO APROVACAO':
-                decisao = input("Aceitar (A), Rejeitar (R) ou Cancelar (C) o pedido? ").upper()
-                if decisao == "A":
-                    pedido_marcado[4] = "ACEITO"
-                    print(f"Pedido #{codigo_pedido} ACEITO. Status atualizado.")
-                elif decisao == "R":
-                    pedido_marcado[4] = "REJEITADO"
-                    pedidos_ativos.remove(pedido_marcado)
-                    pedidos_finalizados.append(pedido_marcado)
-                    print(f"Pedido #{codigo_pedido} REJEITADO e movido para finalizados.")
-                elif decisao == "C":
-                    pedido_marcado[4] = "CANCELADO"
-                    pedidos_ativos.remove(pedido_marcado)
-                    pedidos_finalizados.append(pedido_marcado)
-                    print(f"Pedido #{codigo_pedido} CANCELADO e movido para finalizados.")
-                else:
-                    print(f"Erro: O pedido #{codigo_pedido} não está aguardando aprovação.")
-
-        elif sub_opcao == "2":
-            if pedido_marcado[4] == "ACEITO":
-                pedido_marcado[4] = "FAZENDO"
-                print(f"Pedido #{codigo_pedido} agora está sendo FEITO.")
-            else:
-                print(f"Erro: O pedido #{codigo_pedido} não pode ser iniciado. Status atual: {pedido_marcado[4]}")
-
-        elif sub_opcao == "3":
-            if pedido_marcado[4] == "FAZENDO":
-                pedido_marcado[4] = "FEITO"
-                print(f"Pedido #{codigo_pedido} foi FEITO e está pronto.")
-            else:
-                print(f"Erro: O pedido #{codigo_pedido} não está em preparação. Status atual: {pedido_marcado[4]}")
-
-        elif sub_opcao == "4":
-            if pedido_marcado[4] == "FEITO":
-                pedido_marcado[4] = "ESPERANDO ENTREGADOR"
-                print(f"Pedido #{codigo_pedido} agora está ESPERANDO ENTREGADOR.")
-            else:
-                print(f"Erro: O pedido #{codigo_pedido} ainda não foi feito. Status atual: {pedido_marcado[4]}")
-
-        elif sub_opcao == "5":
-            if pedido_marcado[4] == "ESPERANDO ENTREGADOR":
-                pedido_marcado[4] = "SAIU PARA ENTREGA"
-                print(f"Pedido #{codigo_pedido} SAIU PARA ENTREGA.")
-            else:
-                print(f"Erro: O pedido #{codigo_pedido} não estava aguardando entregador. Status atual: {pedido_marcado[4]}")
-
-        elif sub_opcao == "6":
-            if pedido_marcado[4] == "SAIU PARA ENTREGA":
-                pedido_marcado[4] = "ENTREGUE"
-                pedidos_ativos.remove(pedido_marcado)
-                pedidos_finalizados.append(pedido_marcado)
-                print(f"Pedido #{codigo_pedido} finalizado como ENTREGUE.")
-            else:
-                print(f"Erro: O pedido #{codigo_pedido} não havia saído para entrega. Status atual: {pedido_marcado[4]}")
-            
-        elif sub_opcao == "7":
-            if pedido_marcado[4] in ["AGUARDANDO APROVACAO", "ACEITO"]:
-                pedido_marcado[4] = "CANCELADO"
-                pedidos_ativos.remove(pedido_marcado)
-                pedidos_finalizados.append(pedido_marcado)
-                print(f"Pedido #{codigo_pedido} CANCELADO pelo cliente.")
-            else:
-                print(f"Erro: Pedido não pode mais ser cancelado. Status atual: {pedido_marcado[4]}")
 
 while True:
 
@@ -459,7 +453,7 @@ while True:
       "(3) Consultar Produtos\n"
       "(4) Criar Pedido\n"
       "(5) Processar Pedidos\n"
-      "(7) Consultar Pedidos\n"
+      "(6) Consultar Pedidos\n"
       "(0) SAIR")
 
 
@@ -475,8 +469,6 @@ while True:
     elif opcao == "5":
         gerenciar_status_pedido()
     elif opcao == "6":
-        cancelar_pedido()
-    elif opcao == "7":
         consultar_pedido()
     elif opcao == "0":
         print("Saindo do programa")
